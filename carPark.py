@@ -31,7 +31,7 @@ inbox = outlook.GetDefaultFolder(6)
 messages = inbox.Items
 
 # Path to the existing CSV file
-existing_csv_path = Path("path/to/existing_file.csv")
+existing_csv_path = Path("./TEST.csv")
 existing_csv_path.mkdir(parents=True, exist_ok=True)
 
 # Loop through the messages in the inbox
