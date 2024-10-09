@@ -2,6 +2,19 @@ from pathlib import Path
 import win32com.client
 import pandas as pd
 from collections import Counter
+from datetime import datetime
+
+# Function to read the last run time from lastRan.txt
+def get_last_run_time(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            last_run_str = file.read().strip()  # Read and strip any whitespace
+            # Convert string to datetime object, assuming the format is 'YYYY-MM-DD HH:MM:SS'
+            last_run_time = datetime.strptime(last_run_str, '%Y-%m-%d %H:%M:%S')
+            return last_run_time
+    except FileNotFoundError:
+        # If the file doesn't exist, assume this is the first run
+        return None
 
 def countPark(file_path):
     with open(file_path, 'r') as file:
@@ -22,7 +35,7 @@ def countPark(file_path):
     car_park_df = pd.DataFrame(car_park_count.items(), columns=['car_park_name', 'count'])
 
     # Print the results
-    return car_park_count
+    return car_park_df
 
 
 # Initialize Outlook application
@@ -32,7 +45,12 @@ messages = inbox.Items
 
 # Path to the existing CSV file
 existing_csv_path = Path("./TEST.csv")
-existing_csv_path.mkdir(parents=True, exist_ok=True)
+
+# Path to the last run file
+last_run_file_path = Path("./lastRan.txt")
+
+# Get the last run time
+last_run_time = get_last_run_time(last_run_file_path)
 
 # Loop through the messages in the inbox
 for message in messages:
@@ -40,10 +58,16 @@ for message in messages:
     sender_email = message.SenderEmailAddress
     sent_time = message.SentOn  # This is a datetime object
 
+    # Check if the email was sent after the last run
+    if last_run_time and sent_time <= last_run_time:
+        continue  # Skip this email if it was sent before or at the last run time
+
     # Filter emails based on the sender and subject
     if (sender_email != "eastlansing@harveyec.com" and
         "Customizable Data Export" not in subject):
         continue
+
+    print(sent_time)
 
     # Extract the date from sent_time
     date_only = sent_time.strftime('%Y-%m-%d')  # Format to 'YYYY-MM-DD'
@@ -79,3 +103,7 @@ for message in messages:
 
         # Optionally, remove the temporary file
         temp_file_path.unlink()  # Remove the temporary file
+
+# Write the current time as the last run time to lastRan.txt
+with open(last_run_file_path, 'w') as file:
+    file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
