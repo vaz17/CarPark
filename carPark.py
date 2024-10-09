@@ -68,7 +68,8 @@ for message in messages:
     sent_time = sent_time.astimezone(timezone.utc)
 
     # Ensure last_run_time is also in UTC
-    last_run_time = last_run_time.astimezone(timezone.utc)
+    if last_run_time:
+        last_run_time = last_run_time.astimezone(timezone.utc)
 
     # Now they can be compared safely
     if last_run_time and sent_time < last_run_time:
@@ -116,4 +117,4 @@ for message in messages:
 
 # Write the current time as the last run time to lastRan.txt
 with open(last_run_file_path, 'w') as file:
-    file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))a
+    file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
