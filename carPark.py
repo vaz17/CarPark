@@ -2,7 +2,7 @@ from pathlib import Path
 import win32com.client
 import pandas as pd
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Function to read the last run time from lastRan.txt
 def get_last_run_time(file_path):
@@ -58,16 +58,26 @@ for message in messages:
     sender_email = message.SenderEmailAddress
     sent_time = message.SentOn  # This is a datetime object
 
-    # Check if the email was sent after the last run
-    if last_run_time and sent_time <= last_run_time:
-        continue  # Skip this email if it was sent before or at the last run time
 
     # Filter emails based on the sender and subject
     if (sender_email != "eastlansing@harveyec.com" and
         "Customizable Data Export" not in subject):
         continue
 
-    print(sent_time)
+    # Convert sent_time to UTC just to be sure, even though it's likely already in UTC
+    sent_time = sent_time.astimezone(timezone.utc)
+
+    # Ensure last_run_time is also in UTC
+    last_run_time = last_run_time.astimezone(timezone.utc)
+
+    # Now they can be compared safely
+    if last_run_time and sent_time < last_run_time:
+        continue  # Skip this email if it was sent before or at the last run time
+
+    # Check if the email was sent after the last run
+    if last_run_time and sent_time < last_run_time:
+        continue  # Skip this email if it was sent before or at the last run time
+
 
     # Extract the date from sent_time
     date_only = sent_time.strftime('%Y-%m-%d')  # Format to 'YYYY-MM-DD'
@@ -106,4 +116,4 @@ for message in messages:
 
 # Write the current time as the last run time to lastRan.txt
 with open(last_run_file_path, 'w') as file:
-    file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    file.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))a
